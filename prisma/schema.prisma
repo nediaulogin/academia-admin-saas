@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PlanType {
+  MENSAL
+  TRIMESTRAL
+  ANUAL
+}
+
+enum PaymentMethod {
+  DINHEIRO
+  PIX
+  CARTAO
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  accounts Account[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Plan {
+  id    String   @id @default(uuid())
+  type  PlanType
+  price Decimal
+
+  students Student[]
+}
+
+model Student {
+  id             String   @id @default(uuid())
+  name           String
+  phone          String
+  email          String   @unique
+  enrollmentDate DateTime @default(now())
+
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  amount      Decimal
+  paymentDate DateTime
+  dueDate     DateTime
+
+  method PaymentMethod
+
+  createdAt DateTime @default(now())
+}
