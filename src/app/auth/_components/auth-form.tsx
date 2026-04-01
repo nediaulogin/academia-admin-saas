@@ -5,13 +5,25 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
 import { signIn } from "next-auth/react"
+import { toast } from "sonner"
 
 
 export function AuthForm() {
     const form = useForm()
 
     const handleSubmit = form.handleSubmit(async (data) => {
-        await signIn("email", { email: data.email })
+        try {
+            await signIn("email", { email: data.email, redirect: false, callbackUrl: "/app" })
+
+            toast("Check your email", {
+
+                description: "We have sent you a magic link to sign in to your account",
+            })
+            console.log("Sign in successful")
+
+        } catch (error) {
+            console.error("Error signing in:", error)
+        }
     })
 
     return (
